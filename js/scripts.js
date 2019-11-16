@@ -1,153 +1,181 @@
 /* MAIN SCRIPTS */
 $( document ).ready(function() {
-    loadData();
-    loadTweets();
+  loadTweets();
+  //loadPhotos();
 });
 
 /*** MAPS SCRRIPTS ***/
-function initMap() {
-        var home = {lat: 35.014170, lng: -80.813050};
-        var map = new google.maps.Map(document.getElementById('map'), {
-          center: home,
-          zoom: 14
-        });
-        var marker = new google.maps.Marker({position: home, map: map, title: 'My Home'});
-        var contentString =
-        '<h1>Charlotte Home</h1>'+
-        '<p>My home in Charlotte, the house I have lived in most of my life, is <b>2.5 hours</b> from Chapel Hill.</p>'
-        + '<p>On the map, you can see my house sits very close to the South Carolina border.</p>';
-        var infowindow = new google.maps.InfoWindow({
-          content: contentString
-        });
-        marker.addListener('click', function() {
-          infowindow.open(map, marker);
-        });
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWJieW1vdSIsImEiOiJjazMxc2syNTQwNHcxM2hvcW5nMnRqa3R6In0.M0g2mCwZs80UWus_NEgW9Q';
+var map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/mapbox/streets-v9',
+center: [-73.977664, 40.761484], // starting position [lng, lat]
+zoom: 15.5, // starting zoom
+pitch: 40,
+bearing: 210,
+antialias: true
+});
 
+var size = 150;
+
+// implementation of CustomLayerInterface to draw a pulsing dot icon on the map
+// see https://docs.mapbox.com/mapbox-gl-js/api/#customlayerinterface for more info
+var pulsingDot = {
+  width: size,
+  height: size,
+  data: new Uint8Array(size * size * 4),
+
+  // get rendering context for the map canvas when layer is added to the map
+  onAdd: function() {
+    var canvas = document.createElement('canvas');
+    canvas.width = this.width;
+    canvas.height = this.height;
+    this.context = canvas.getContext('2d');
+},
+
+// called once before every frame where the icon will be used
+render: function() {
+  var duration = 1000;
+  var t = (performance.now() % duration) / duration;
+
+  var radius = size / 2 * 0.3;
+  var outerRadius = size / 2 * 0.7 * t + radius;
+  var context = this.context;
+
+  // draw outer circle
+  context.clearRect(0, 0, this.width, this.height);
+  context.beginPath();
+  context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
+  context.fillStyle = 'rgba(255, 200, 200,' + (1 - t) + ')';
+  context.fill();
+
+  // draw inner circle
+  context.beginPath();
+  context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
+  context.fillStyle = 'rgba(255, 100, 100, 1)';
+  context.strokeStyle = 'white';
+  context.lineWidth = 2 + 4 * (1 - t);
+  context.fill();
+  context.stroke();
+
+// update this image's data with data from the canvas
+  this.data = context.getImageData(0, 0, this.width, this.height).data;
+
+  // continuously repaint the map, resulting in the smooth animation of the dot
+  map.triggerRepaint();
+
+  // return `true` to let the map know that the image was updated
+  return true;
+  }
+};
+
+map.on('load', function () {
+
+  map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
+
+  map.addLayer({
+    "id": "points",
+    "type": "symbol",
+    "source": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [{
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [-73.977664, 40.761484]
+                }
+              }]
+            }
+          },
+        "layout": {
+        "icon-image": "pulsing-dot"
       }
+    });
+    // Insert the layer beneath any symbol layer.
+    var layers = map.getStyle().layers;
 
+    var labelLayerId;
+    for (var i = 0; i < layers.length; i++) {
+    if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
+    labelLayerId = layers[i].id;
+    break;
+    }
+    }
 
-/*** NEWS SCRRIPTS ***/
-function loadData(){
+    map.addLayer({
+    'id': '3d-buildings',
+    'source': 'composite',
+    'source-layer': 'building',
+    'filter': ['==', 'extrude', 'true'],
+    'type': 'fill-extrusion',
+    'minzoom': 15,
+    'paint': {
+    'fill-extrusion-color': '#aaa',
+
+    // use an 'interpolate' expression to add a smooth transition effect to the
+    // buildings as the user zooms in
+    'fill-extrusion-height': [
+    "interpolate", ["linear"], ["zoom"],
+    15, 0,
+    15.05, ["get", "height"]
+    ],
+    'fill-extrusion-base': [
+    "interpolate", ["linear"], ["zoom"],
+    15, 0,
+    15.05, ["get", "min_height"]
+    ],
+    'fill-extrusion-opacity': .6
+    }
+    }, labelLayerId);
+    });
+
+/*** IMAGES SCRIPTS ***/
+
+var APIKey = 'cfc1c3deab010108fdbdbb3f0747211f5e0824bab58c0d235deea3a723e7dc0d';
+
+$.getJSON('https://api.unsplash.com/search/photos?page=1&query=museum-of-modern-art&client_id=cfc1c3deab010108fdbdbb3f0747211f5e0824bab58c0d235deea3a723e7dc0d', function(data) {
+  console.log(data);
+
+  var results = data.results;
+
+  $.each(results, function(i, val){
+    var image = val;
+    var imageURL = val.urls.regular;
+    var imageWidth = val.width;
+    var imageHeight = val.height;
+    //console.log(imageURL);
+
+    $('.grid').append('<div class="image"><img src="' + imageURL + '"></div>')
+  });
+});
+
+/*** TWITTTER SCRIPTS ***/
+function loadTweets(){
     $.ajax({
             type:"GET",
-            url:"https://newsapi.org/v1/sources",
+            url: "tweets.json",
             dataType:"json",
-            success: parseData
+            success: parseTweets
           });
   }
 
-function parseData(data){
+function parseTweets(data){
+  var twitterHtml = "";
+  for (var i = 0; i < data.length; ++i) {
 
-  var sources = [];
-  var tempPath = data["sources"];
-  var html = "";
+    var id = data[i].id;
+    var user = data[i].userName;
+    var handle = data[i].screenName;
+    var img = data[i].profileImage;
+    var text = data[i].text;
 
-  for (var i = 0, len = tempPath.length; i < len; ++i) {
-    //sets data to arrays
-    sources.push(tempPath[i]);
-    console.log(sources[0]["name"]);
-
-    html += '<li><a href="#" onclick="loadArticles(\'' + sources[i]["id"] + '\')">' + sources[i]["name"] + '</a></li>';
+    twitterHtml += '<div class="tweet-feed"><img class="twitter-img" src="' + img + '">';
+    twitterHtml += '<h4 class="twitter-handle">' + user + '<br>' + "@" + handle + '</h4>';
+    twitterHtml += '<p>' + text + '<hr>' + '</p></div>';
   }
 
-  $("#sources-area").html(html);
+  $("#tweets").html(twitterHtml);
 
 }
-
-function loadArticles(source) {
-
-    $.ajax({
-            type:"GET",
-            url:"https://newsapi.org/v1/articles?source=" + source + "&sortBy=top&apiKey=849f3699b61843678554e9fbd5e27c96",
-            dataType:"json",
-            success: parseArticles
-          });
-        }
-
-function parseArticles(data){
-
-  var articles = [];
-  var tempPath = data["articles"];
-  var html = "";
-
-  for (var i = 0, len = tempPath.length; i < len; ++i){
-    articles.push(tempPath[i]);
-
-    html += '<div><h3><a href="' + articles[i]["url"] + '">' + articles[i]["title"] + '</a></h3></div>'
-    html += '<p>' + articles[i]["description"] + '</p>'
-  }
-
-$("#feed-area").html(html);
-
-}
-
-
-/*** VIDEOS SCRRIPTS ***/
-      function authenticate() {
-        return gapi.auth2.getAuthInstance()
-            .signIn({scope: "https://www.googleapis.com/auth/youtube.force-ssl"})
-            .then(function() { console.log("Sign-in successful"); },
-                  function(err) { console.error("Error signing in", err); });
-      }
-      function loadClient() {
-        gapi.client.setApiKey("AIzaSyBprZvKxEac1K923yWnV6hzkY71ekaoDRE");
-        return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest")
-            .then(function() { console.log("GAPI client loaded for API"); },
-                  function(err) { console.error("Error loading GAPI client for API", err); });
-      }
-      // Make sure the client is loaded and sign-in is complete before calling this method.
-      function execute() {
-        return gapi.client.youtube.search.list({
-          "part": "snippet",
-          "q": "halloween"
-        })
-            .then(function(response) {
-                    // Handle the results here (response.result has the parsed body).
-                    console.log("Response", response);
-                    parseVideos(response);
-                  },
-                  function(err) { console.error("Execute error", err); });
-      }
-      gapi.load("client:auth2", function() {
-        gapi.auth2.init({client_id: "1012442286337-2uaqp2i29soln9cikhd0n02j7k0mta51.apps.googleusercontent.com"});
-      });
-
-      function parseVideos(response){
-        var tempPath2 = response.result;
-        var videoHtml = "";
-
-        for (var i = 0, len2 = tempPath2.items.length; i < len2; ++i) {
-          console.log(tempPath2.items[i].id.videoId);
-          videoHtml += "<h2>" + tempPath2.items[i].snippet.title + "</h2>";
-          videoHtml += '<iframe width="560" height="315" src="https://www.youtube.com/embed/' + tempPath2.items[i].id.videoId + '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
-        }
-        $("#videos").html(videoHtml);
-      }
-
-/*** TWITTER SCRIPTS ***/
-  function loadTweets(){
-      $.ajax({
-              type:"GET",
-              url: "tweets.json",
-              dataType:"json",
-              success: parseTweets
-            });
-    }
-
-  function parseTweets(data){
-    var twitterHtml = "";
-    for (var i = 0; i < data.length; ++i) {
-
-      var id = data[i].id;
-      var user = data[i].screenName;
-      var img = data[i].profileImage;
-      var text = data[i].text;
-
-      twitterHtml += '<div><img src="' + img + '">';
-      twitterHtml += '<h4>' + user + '</h4>';
-      twitterHtml += '<p>' + text + '</p></div>';
-    }
-
-    $("#tweets").html(twitterHtml);
-
-  }
