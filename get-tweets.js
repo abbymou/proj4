@@ -2,8 +2,15 @@ const Twitter = require('twitter');
 const config = require('./config.js');
 const fs = require('fs');
 const T = new Twitter(config);
+const path = require('path');
 
-console.log("launching twitter-bot script");
+const {Storage} = require('@google-cloud/storage');
+const gc = new Storage({
+  keyFilename: path.join(__dirname, '487gmAM-b6274e4d192d.json'),
+  projectId: '487gmAM-b6274e4d192d'
+});
+
+gc.getBuckets().then(x => console.log(x));
 
 // Set up your search parameters
 const params = {
