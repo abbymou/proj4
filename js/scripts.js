@@ -142,11 +142,12 @@ $.getJSON('https://api.unsplash.com/search/photos?page=1&query=museum-of-modern-
   $.each(results, function(i, val){
     var image = val;
     var imageURL = val.urls.regular;
+    var imageLink = val.links.html;
     var imageWidth = val.width;
     var imageHeight = val.height;
     //console.log(imageURL);
 
-    $('.grid').append('<div class="image"><img src="' + imageURL + '"></div>')
+    $('.grid').append('<div class="image"><a href="' + imageLink + '" target="_blank" class="image-effect"><img src="' + imageURL + '"></a></div>')
   });
 });
 
@@ -171,8 +172,8 @@ function parseTweets(data){
     var text = data[i].text;
 
     twitterHtml += '<div class="tweet-feed"><img class="twitter-img" src="' + img + '">';
-    twitterHtml += '<h4 class="twitter-handle">' + user + '<br>' + "@" + handle + '</h4>';
-    twitterHtml += '<p>' + text + '<hr>' + '</p></div>';
+    twitterHtml += '<h4 class="twitter-handle">' + user + '<h5 class="twitter-name">' + " @" + handle + '</h5>' + '</h4>';
+    twitterHtml += '<p>' + text + '</p></div>' + '<br>';
   }
 
   $("#tweets").html(twitterHtml);

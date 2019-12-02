@@ -200,11 +200,26 @@ a.footer-link:hover {
   left: 17%;
 }
 
+/** IMAGES API **/
+
+.image {
+  transition: 1s ease;
+}
+
+.image:hover {
+  -webkit-transform: scale(0.9);
+  -ms-transform: scale(0.9);
+  transform: scale(0.9);
+  transition: 1s ease;
+}
+
 /** Twitter API **/
 .tweet-feed {
-  width: 70%;
-  padding: 10px;
-  margin: 10px;
+  margin: auto;
+  width: 80%;
+  padding: 15px;
+  background-color: #f4f4f4;
+  border-radius: 20px;
 }
 
 .twitter-img {
@@ -212,11 +227,26 @@ a.footer-link:hover {
   width: 50px;
   display: inline-block;
   margin-right: 10px;
+  border-radius: 50%;
 }
 
 .twitter-handle {
   display: inline-block;
-  font-size: 100%;
+  font-size: 120%;
+  font-weight: bold;
+}
+
+.twitter-name {
+  display: inline-block;
+  font-size: 90%;
+  font-family: 'Raleway', sans-serif;
+  font-weight: lighter;
+  padding-left: 10px;
+}
+
+#tweets {
+  margin: auto;
+  width: 100%;
 }
 
 /** Images API **/
@@ -263,6 +293,12 @@ a.footer-link:hover {
   .tweet-feed {
     width: 100%;
     margin: 5px;
+  }
+  .twitter-handle {
+    font-size: 110%;
+  }
+  .twitter-name {
+    display: none;
   }
   .grid {
     grid-template-columns: 1fr;
