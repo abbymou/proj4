@@ -65,6 +65,11 @@ img {
   display: block;
 }
 
+.row {
+  position: relative;
+  z-index: 2;
+}
+
 .break {
   margin-top: 5%;
 }
@@ -198,6 +203,7 @@ a.footer-link:hover {
   position: absolute;
   top: 300px;
   left: 17%;
+  z-index: 1;
 }
 
 /** IMAGES API **/
