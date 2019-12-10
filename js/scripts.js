@@ -134,7 +134,7 @@ map.on('load', function () {
 /*** IMAGES SCRIPTS ***/
 var APIKey = 'cfc1c3deab010108fdbdbb3f0747211f5e0824bab58c0d235deea3a723e7dc0d';
 
-$.getJSON('https://api.unsplash.com/search/photos?page=1&query=museum-of-modern-art&client_id=cfc1c3deab010108fdbdbb3f0747211f5e0824bab58c0d235deea3a723e7dc0d', function(data) {
+$.getJSON('https://api.unsplash.com/search/photos?page=1&query=moma&client_id=cfc1c3deab010108fdbdbb3f0747211f5e0824bab58c0d235deea3a723e7dc0d', function(data) {
   console.log(data);
 
   var results = data.results;

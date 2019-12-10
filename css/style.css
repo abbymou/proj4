@@ -204,6 +204,7 @@ a.footer-link:hover {
   top: 300px;
   left: 17%;
   z-index: 1;
+  overflow: hidden;
 }
 
 /** IMAGES API **/
